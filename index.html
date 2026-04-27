@@ -2,135 +2,166 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>XAM | ULTRA TERMINAL V5</title>
+    <title>XAM | TERMINAL ULTIMATE</title>
     <style>
-        :root { --neon: #00ff41; --bg: #010101; --panel: rgba(0, 20, 0, 0.8); }
-        
+        :root { --neon: #00ff41; --bg: #010101; --panel: rgba(0, 15, 0, 0.9); }
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; }
 
-        /* Эффект старого ЭЛТ монитора */
-        body::before {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        /* Фоновая анимация сетки */
+        #canvas-bg { position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.2; }
+
+        /* Эффект старого монитора (скан-линии) */
+        .overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            background-size: 100% 3px, 3px 100%; pointer-events: none; z-index: 100;
         }
 
-        .screen {
-            display: grid; grid-template-rows: 60px 1fr 200px;
-            width: 100vw; height: 100vh; padding: 15px; gap: 15px; position: relative; z-index: 1;
+        .layout {
+            display: grid; grid-template-rows: 80px 1fr 220px;
+            width: 100vw; height: 100vh; padding: 25px; gap: 20px;
         }
 
-        /* Верхняя панель */
-        .top-bar { border: 1px solid var(--neon); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; background: var(--panel); box-shadow: 0 0 15px rgba(0,255,65,0.2); }
-        .glitch { font-size: 1.5rem; font-weight: bold; letter-spacing: 10px; animation: blink 1s infinite; }
+        /* Шапка */
+        .header { 
+            border: 1px solid var(--neon); background: var(--panel); 
+            display: flex; align-items: center; padding: 0 40px; justify-content: space-between; 
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); 
+        }
+        .logo { font-size: 2rem; font-weight: bold; letter-spacing: 15px; text-shadow: 0 0 10px var(--neon); }
 
-        /* Центр: Мониторинг */
-        .main-engine { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .module { border: 1px solid var(--neon); background: var(--panel); padding: 30px; display: flex; flex-direction: column; justify-content: center; position: relative; }
-        .module::after { content: "MODULE_ACTIVE"; position: absolute; top: 5px; right: 10px; font-size: 0.6rem; opacity: 0.5; }
+        /* Основной блок мониторинга */
+        .engine-room { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .module { 
+            border: 1px solid var(--neon); background: var(--panel); 
+            padding: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; overflow: hidden;
+        }
+        .module::before { content: "DATA_FEED_ACTIVE"; position: absolute; top: 10px; left: 15px; font-size: 0.7rem; opacity: 0.4; }
 
-        .big-data { font-size: 10rem; font-weight: bold; line-height: 1; margin: 20px 0; text-shadow: 0 0 30px var(--neon); }
-        .label { font-size: 1rem; letter-spacing: 5px; color: #fff; text-transform: uppercase; }
+        .big-val { font-size: 18rem; font-weight: bold; line-height: 1; margin: 0; text-shadow: 0 0 50px var(--neon); }
+        .label { font-size: 1.8rem; letter-spacing: 12px; color: #fff; margin-bottom: 20px; }
 
-        /* Нижняя панель: Управление и Логи */
-        .bottom-deck { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* Нижний блок: Управление */
+        .control-deck { display: grid; grid-template-columns: 500px 1fr; gap: 25px; }
+        .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
         button { 
             background: transparent; border: 1px solid var(--neon); color: var(--neon); 
-            font-family: inherit; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase;
+            font-family: inherit; font-size: 1.2rem; font-weight: bold; cursor: pointer; 
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 3px;
         }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
-        .danger { border-color: #ff003c; color: #ff003c; }
-        .danger:hover { background: #ff003c; color: #fff; }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 30px var(--neon); }
+        .btn-kill { border-color: #ff003c; color: #ff003c; }
+        .btn-kill:hover { background: #ff003c; color: #fff; box-shadow: 0 0 30px #ff003c; }
 
-        #console-flow { background: #000; border: 1px solid #1a1a1a; padding: 15px; font-size: 0.8rem; overflow-y: auto; white-space: pre-wrap; }
-
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        #terminal-log { 
+            background: #000; border: 1px solid #1a1a1a; padding: 20px; font-size: 1rem; 
+            overflow-y: auto; color: #00ff41; line-height: 1.6; text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
 
-<div class="screen">
-    <div class="top-bar">
-        <div class="glitch">XAM_OS_TERMINAL_v5.0</div>
-        <div id="status-link">[ STATUS: ENCRYPTED_UPLINK ]</div>
-        <div id="timer">00:00:00</div>
+<canvas id="canvas-bg"></canvas>
+<div class="overlay"></div>
+
+<div class="layout">
+    <div class="header">
+        <div class="logo">XAM_CORE_V6</div>
+        <div id="uplink-status" style="color: #ff003c;">[ UPLINK: DISCONNECTED ]</div>
+        <div id="sys-time" style="font-size: 1.5rem;">00:00:00</div>
     </div>
 
-    <div class="main-engine">
+    <div class="engine-room">
         <div class="module">
-            <div class="label">CPU_CORE_LOAD</div>
-            <div class="big-data" id="cpu">00</div>
-            <div style="font-size: 1.5rem;">PERCENTAGE_UTILIZATION</div>
+            <div class="label">CPU_CORE_UTILIZATION</div>
+            <div class="big-val" id="cpu-num">00</div>
+            <div style="font-size: 1.5rem; opacity: 0.6;">MEGAHERTZ_FLOW_ACTIVE</div>
         </div>
         <div class="module">
-            <div class="label">MEMORY_BLOCK_USAGE</div>
-            <div class="big-data" id="ram">00</div>
-            <div style="font-size: 1.5rem;">ALLOCATED_RESOURCES</div>
+            <div class="label">MEMORY_BLOCK_ALLOCATION</div>
+            <div class="big-val" id="ram-num">00</div>
+            <div style="font-size: 1.5rem; opacity: 0.6;">VOLATILE_STORAGE_SYNC</div>
         </div>
     </div>
 
-    <div class="bottom-deck">
-        <div class="controls">
-            <button onclick="run('screenshot')">Capture</button>
-            <button onclick="run('calc')">Utility</button>
-            <button class="danger" onclick="run('reboot')">Reboot</button>
-            <button class="danger" onclick="run('shutdown')">Kill_Sys</button>
+    <div class="control-deck">
+        <div class="button-grid">
+            <button onclick="sendCmd('screenshot')">Snap_Screen</button>
+            <button onclick="sendCmd('calc')">Run_App</button>
+            <button class="btn-kill" onclick="sendCmd('reboot')">Reboot_Sys</button>
+            <button class="btn-kill" onclick="sendCmd('shutdown')">Full_Kill</button>
         </div>
-        <div id="console-flow">>> SYSTEM INITIALIZED... READY FOR COMMANDS.</div>
+        <div id="terminal-log">>> INITIALIZING NEURAL LINK... SYSTEM READY FOR COMMANDS.</div>
     </div>
 </div>
 
 <script>
-    const CONFIG = {
-        u: 'drodilkin',
-        r: 'my-pc-monitor',
-        t: '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'
+    const GITHUB = {
+        user: 'drodilkin',
+        repo: 'my-pc-monitor',
+        token: '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'
     };
 
-    function log(msg) {
-        const c = document.getElementById('console-flow');
-        c.innerHTML += `\n[${new Date().toLocaleTimeString()}] > ${msg}`;
-        c.scrollTop = c.scrollHeight;
+    function writeLog(text) {
+        const log = document.getElementById('terminal-log');
+        log.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${text}</div>`;
+        log.scrollTop = log.scrollHeight;
     }
 
-    async function run(a) {
-        if(!confirm('CONFIRM ' + a)) return;
+    async function sendCmd(action) {
+        if(!confirm('AUTHORIZE ' + action.toUpperCase() + '?')) return;
+        writeLog('TRANSMITTING SIGNAL: ' + action);
         try {
-            const res = await fetch(`https://api.github.com/repos/${CONFIG.u}/${CONFIG.r}/contents/command.json`);
-            const f = await res.json();
-            const body = { 
-                message: "cmd_broadcast", 
-                content: btoa(JSON.stringify({command: a, time: Date.now()})), 
-                sha: f.sha 
+            const res = await fetch(`https://api.github.com/repos/${GITHUB.user}/${GITHUB.repo}/contents/command.json`);
+            const file = await res.json();
+            const payload = {
+                message: "uplink_command",
+                content: btoa(JSON.stringify({command: action, time: Date.now()})),
+                sha: file.sha
             };
-            await fetch(`https://api.github.com/repos/${CONFIG.u}/${CONFIG.r}/contents/command.json`, {
+            await fetch(`https://api.github.com/repos/${GITHUB.user}/${GITHUB.repo}/contents/command.json`, {
                 method: 'PUT',
-                headers: { 'Authorization': 'token ' + CONFIG.t },
-                body: JSON.stringify(body)
+                headers: { 'Authorization': 'token ' + GITHUB.token },
+                body: JSON.stringify(payload)
             });
-            log('COMMAND_SENT: ' + a);
-        } catch(e) { log('NETWORK_ERROR: ' + e.message); }
+            writeLog('SIGNAL CONFIRMED: ' + action);
+        } catch(e) { writeLog('UPLINK ERROR: ' + e.message); }
     }
 
-    async function sync() {
+    async function refreshData() {
         try {
-            const r = await fetch(`https://raw.githubusercontent.com/${CONFIG.u}/${CONFIG.r}/main/stats.json?v=${Date.now()}`);
+            const r = await fetch(`https://raw.githubusercontent.com/${GITHUB.user}/${GITHUB.repo}/main/stats.json?t=` + Date.now());
             const d = await r.json();
-            document.getElementById('cpu').innerText = Math.round(d.cpu);
-            document.getElementById('ram').innerText = Math.round(d.ram);
-            document.getElementById('status-link').style.color = '#00ff41';
+            document.getElementById('cpu-num').innerText = Math.round(d.cpu);
+            document.getElementById('ram-num').innerText = Math.round(d.ram);
+            document.getElementById('uplink-status').innerText = '[ UPLINK: ENCRYPTED ]';
+            document.getElementById('uplink-status').style.color = '#00ff41';
         } catch(e) {
-            document.getElementById('status-link').style.color = '#ff003c';
+            document.getElementById('uplink-status').innerText = '[ UPLINK: LOST ]';
+            document.getElementById('uplink-status').style.color = '#ff003c';
         }
     }
 
-    setInterval(() => { document.getElementById('timer').innerText = new Date().toLocaleTimeString(); }, 1000);
-    setInterval(sync, 5000);
-    sync();
+    // Фоновая анимация
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    function drawGrid() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#00ff41'; ctx.lineWidth = 0.5;
+        for(let i=0; i<canvas.width; i+=50) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+        for(let j=0; j<canvas.height; j+=50) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }
+    }
+    setInterval(drawGrid, 100);
+    setInterval(() => { document.getElementById('sys-time').innerText = new Date().toLocaleTimeString(); }, 1000);
+    setInterval(refreshData, 5000);
+    refreshData();
 </script>
-
 </body>
 </html>
