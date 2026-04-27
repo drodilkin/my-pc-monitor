@@ -1,63 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>XAM | TERMINAL_STELTH_v3</title>
+    <title>XAM | CMD_MONITOR</title>
     <style>
-        body { background: #000; color: #fff; font-family: "Consolas", monospace; padding: 25px; line-height: 1.6; }
-        .green { color: #00ff41; }
+        body { background: #000; color: #00ff41; font-family: "Consolas", monospace; padding: 20px; font-size: 14px; }
         .dim { color: #444; }
+        .val { color: #fff; font-weight: bold; }
+        #wrap { border-left: 2px solid #222; padding-left: 15px; margin: 15px 0; }
         .blink { animation: b 1s infinite; }
         @keyframes b { 50% { opacity: 0; } }
-        #data-box { margin: 20px 0; border-left: 2px solid #222; padding-left: 15px; }
     </style>
 </head>
 <body>
-    <div class="dim">XAM_MONITORING_SYSTEM [Build 2026.04]</div>
-    <div class="dim">Stealth Bypass Module: ENABLED</div>
-    <div class="line">&nbsp;</div>
-    
-    <div id="data-box">
-        <div class="line">>>> CONNECTION: <span id="st" class="green">SEARCHING...</span></div>
-        <div class="line">--------------------------------------</div>
-        <div class="line">CPU_LOAD: [ <span id="c" class="green">00</span>% ]</div>
-        <div class="line">RAM_LOAD: [ <span id="r" class="green">00</span>% ]</div>
-        <div class="line">TEMPERATURE: [ <span id="t" class="green">00</span>°C ]</div>
-        <div class="line">--------------------------------------</div>
-        <div class="line dim">LAST_UPDATE: <span id="s">N/A</span></div>
+    <div class="dim">XAM_MONITORING_OS [Version 13.0.1]</div>
+    <div class="dim">Turbo_Cache_Bypass: ACTIVE</div>
+
+    <div id="wrap">
+        <div>>>> STATUS: <span id="st">CONNECTING...</span></div>
+        <div>------------------------------------</div>
+        <div>CPU_LOAD: [ <span id="c" class="val">00</span>% ]</div>
+        <div>RAM_LOAD: [ <span id="r" class="val">00</span>% ]</div>
+        <div>TEMP_VAL: [ <span id="t" class="val">00</span>°C ]</div>
+        <div>------------------------------------</div>
+        <div class="dim">SYNC: <span id="s">--:--:--</span></div>
     </div>
 
-    <div class="line">C:\XAM_MONITOR> <span class="green blink">_</span></div>
+    <div>C:\XAM_MONITOR> <span class="blink">_</span></div>
 
     <script>
-        // Маскировка (вставь свой ghp_ сюда, если этот забанен)
-        const _m = [103,104,112,95,69,102,74,75,73,51,110,53,89,67,73,68,100,78,112,53,98,88,52,80,102,110,121,107,69,83,75,107,78,75,50,122,49,109,107,82];
+        // Твоя маскировка токена (разбей его сам, если надо)
         const REPO = "drodilkin/my-pc-monitor";
 
-        async function sync() {
+        async function refresh() {
             try {
-                // ФИКС ОБНОВЛЕНИЯ: добавляем уникальный номер к ссылке
-                const cacheBuster = Date.now();
-                const url = `https://raw.githubusercontent.com/${REPO}/main/stats.json?v=${cacheBuster}`;
-                
-                const response = await fetch(url);
-                if (!response.ok) throw new Error();
-                const data = await response.json();
+                // Добавляем ?t=... чтобы сбить кэш Гитхаба
+                const r = await fetch(`https://raw.githubusercontent.com/${REPO}/main/stats.json?t=${Date.now()}`);
+                if (!r.ok) return;
+                const d = await r.json();
 
-                document.getElementById('c').innerText = Math.round(data.cpu);
-                document.getElementById('r').innerText = Math.round(data.ram);
-                document.getElementById('t').innerText = data.temp || '55';
-                document.getElementById('s').innerText = data.time || '--:--:--';
-                document.getElementById('st').innerText = "STABLE";
-                document.getElementById('st').style.color = "#00ff41";
-            } catch (e) {
-                document.getElementById('st').innerText = "RECONNECTING";
-                document.getElementById('st').style.color = "red";
+                document.getElementById('c').innerText = Math.round(d.cpu);
+                document.getElementById('r').innerText = Math.round(d.ram);
+                document.getElementById('t').innerText = d.temp;
+                document.getElementById('s').innerText = d.time;
+                document.getElementById('st').innerText = "ONLINE";
+                document.getElementById('st').className = "green";
+            } catch(e) {
+                document.getElementById('st').innerText = "LINK_DELAY";
             }
         }
 
-        setInterval(sync, 3000);
-        sync();
+        // Опрашиваем раз в 2 секунды (быстрее смысла нет из-за CDN Гитхаба)
+        setInterval(refresh, 2000);
+        refresh();
     </script>
 </body>
 </html>
