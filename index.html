@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xam | System Terminal</title>
+    <style>
+        /* Стиль настоящей консоли */
+        body {
+            background-color: #0a0a0a;
+            color: #00ff41; /* Тот самый зеленый из Матрицы */
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .terminal {
+            width: 90%;
+            max-width: 600px;
+            background: #000;
+            border: 1px solid #333;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative;
+        }
+
+        /* Полоска сверху как у окна */
+        .terminal-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .dot { height: 8px; width: 8px; border-radius: 50%; margin-right: 5px; }
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green-dot { background: #27c93f; }
+
+        .line { margin-bottom: 15px; font-size: 1.1rem; }
+        .label { color: #888; text-transform: uppercase; font-size: 0.8rem; }
+        .value { font-weight: bold; margin-left: 10px; }
+        
+        .status-badge {
+            padding: 2px 8px;
+            border: 1px solid #00ff41;
+            font-size: 0.9rem;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: #00ff41;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="terminal">
+    <div class="terminal-header">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green-dot"></div>
+    </div>
+
+    <div class="line">> INITIALIZING DIAGNOSTICS... <span style="color: #fff;">DONE</span></div>
+    
+    <div class="line">
+        <span class="label">CPU LOAD:</span>
+        <span id="cpu" class="value">--%</span>
+    </div>
+
+    <div class="line">
+        <span class="label">TEMPERATURE:</span>
+        <span id="temp" class="value" style="color: #ffbd2e;">--°C</span>
+    </div>
+
+    <div class="line">
+        <span class="label">RAM USAGE:</span>
+        <span id="ram" class="value">--%</span>
+    </div>
+
+    <div class="line">
+        <span class="label">SYSTEM STATUS:</span>
+        <span id="status" class="status-badge">WAITING</span>
+    </div>
+
+    <div class="line">> _ <span class="cursor"></span></div>
+</div>
+
+<script>
+    // Твоя прямая ссылка на данные
+    const DATA_URL = "https://raw.githubusercontent.com/drodilkin/my-pc-monitor/main/stats.json";
+
+    async function updateDashboard() {
+        try {
+            // Добавляем случайный параметр, чтобы GitHub не подсовывал старый файл из кэша
+            const response = await fetch(DATA_URL + "?nocache=" + Math.random());
+            const data = await response.json();
+
+            document.getElementById('cpu').innerText = data.cpu;
+            document.getElementById('ram').innerText = data.ram;
+            document.getElementById('temp').innerText = data.temp;
+            document.getElementById('status').innerText = data.status;
+
+            // Если всё ок, подсвечиваем статус
+            if (data.status === "ОТЛИЧНОЕ") {
+                document.getElementById('status').style.color = "#00ff41";
+                document.getElementById('status').style.borderColor = "#00ff41";
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки данных...");
+            document.getElementById('status').innerText = "OFFLINE";
+            document.getElementById('status').style.color = "#ff5f56";
+        }
+    }
+
+    // Обновляем каждые 35 секунд (чуть реже, чем пушит Питон)
+    setInterval(updateDashboard, 35000);
+    updateDashboard(); // Первый запуск сразу
+</script>
+
+</body>
+</html>
