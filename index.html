@@ -2,108 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>XAM | TERMINAL ULTIMATE V6</title>
+    <title>XAM | TERMINAL V7</title>
     <style>
-        :root { --neon: #00ff41; --bg: #010101; --panel: rgba(0, 15, 0, 0.9); }
+        :root { --neon: #00ff41; --bg: #010101; }
         * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.15) 50%), linear-gradient(90deg, rgba(255,0,0,0.04), rgba(0,255,0,0.01), rgba(0,0,255,0.04)); background-size: 100% 3px, 3px 100%; pointer-events: none; z-index: 100; }
-        .wrapper { display: grid; grid-template-rows: 70px 1fr 220px; width: 100vw; height: 100vh; padding: 15px; gap: 15px; }
-        .header { border: 1px solid var(--neon); background: var(--panel); display: flex; align-items: center; padding: 0 30px; justify-content: space-between; box-shadow: 0 0 15px rgba(0,255,65,0.2); }
-        .main-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px; }
-        .left-core { display: grid; grid-template-rows: 1fr 1fr; gap: 15px; }
-        .module { border: 1px solid var(--neon); background: var(--panel); padding: 30px; display: flex; flex-direction: column; justify-content: center; position: relative; }
-        .big-data { font-size: 15rem; font-weight: bold; line-height: 0.8; margin: 10px 0; text-shadow: 0 0 40px var(--neon); }
-        .label { font-size: 1.2rem; letter-spacing: 8px; color: #fff; text-transform: uppercase; }
-        .side-panel { display: grid; grid-template-rows: repeat(3, 1fr); gap: 15px; }
-        .sub-mod { border: 1px solid #111; background: rgba(5,5,5,0.8); padding: 15px; }
-        .bottom-grid { display: grid; grid-template-columns: 400px 1fr 400px; gap: 15px; }
+        
+        /* Fullscreen Grid Layout */
+        .wrapper { display: grid; grid-template-rows: 70px 1fr 200px; width: 100vw; height: 100vh; padding: 20px; gap: 20px; position: relative; }
+        
+        /* Scanline Effect */
+        .wrapper::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.1) 50%), linear-gradient(90deg, rgba(255,0,0,0.03), rgba(0,255,0,0.01), rgba(0,0,255,0.03)); background-size: 100% 3px, 3px 100%; pointer-events: none; }
+
+        .top-nav { border: 1px solid var(--neon); display: flex; align-items: center; padding: 0 40px; justify-content: space-between; background: rgba(0, 20, 0, 0.3); }
+        .main-engine { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .module { border: 1px solid var(--neon); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; }
+        
+        /* GIANT NUMBERS */
+        .big-data { font-size: 18rem; font-weight: bold; line-height: 0.8; margin: 0; text-shadow: 0 0 50px var(--neon); }
+        .label { font-size: 1.5rem; letter-spacing: 10px; color: #fff; margin-bottom: 20px; }
+
+        .bottom-deck { display: grid; grid-template-columns: 450px 1fr; gap: 20px; }
         .btn-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { background: transparent; border: 1px solid var(--neon); color: var(--neon); font-family: inherit; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1.1rem; }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+        
+        button { background: transparent; border: 1px solid var(--neon); color: var(--neon); font-family: inherit; font-weight: bold; font-size: 1.2rem; cursor: pointer; transition: 0.3s; }
+        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 30px var(--neon); }
         .danger { border-color: #ff003c; color: #ff003c; }
         .danger:hover { background: #ff003c; color: #fff; }
-        #terminal { background: #000; border: 1px solid #111; padding: 15px; font-size: 0.8rem; overflow-y: auto; color: #008f11; white-space: pre-wrap; }
+
+        #console-log { background: #000; border: 1px solid #1a1a1a; padding: 20px; font-size: 1rem; overflow-y: auto; color: #00ff41; line-height: 1.4; }
     </style>
 </head>
 <body>
-<div class="overlay"></div>
 <div class="wrapper">
-    <div class="header">
-        <div style="font-size: 2rem; font-weight: bold; letter-spacing: 15px;">XAM_TERMINAL_V6</div>
-        <div id="status" style="color:#ff003c">[ LINK_OFFLINE ]</div>
-        <div id="sys-time">00:00:00</div>
+    <div class="top-nav">
+        <div style="font-size: 2rem; font-weight: bold; letter-spacing: 15px;">XAM_CORE_v7</div>
+        <div id="status" style="color: #ff003c;">[ LINK_WAITING ]</div>
+        <div id="clock">00:00:00</div>
     </div>
-    <div class="main-grid">
-        <div class="left-core">
-            <div class="module">
-                <div class="label">CPU_UTILIZATION</div>
-                <div class="big-data" id="cpu">00</div>
-                <div style="font-size: 1rem; opacity: 0.5;">REALTIME_CORE_FREQUENCY_SYNC</div>
-            </div>
-            <div class="module">
-                <div class="label">MEMORY_RESOURCES</div>
-                <div class="big-data" id="ram">00</div>
-                <div style="font-size: 1rem; opacity: 0.5;">VOLATILE_STORAGE_MAP</div>
-            </div>
+
+    <div class="main-engine">
+        <div class="module">
+            <div class="label">CPU_LOAD</div>
+            <div class="big-data" id="cpu">00</div>
         </div>
-        <div class="side-panel">
-            <div class="sub-mod">
-                <div class="label" style="font-size: 0.8rem;">TEMP_SENSORS</div>
-                <div id="temp" style="font-size: 4rem; color: #ffbd2e;">0.0°C</div>
-            </div>
-            <div class="sub-mod">
-                <div class="label" style="font-size: 0.8rem;">NETWORK_LINK</div>
-                <div id="net" style="font-size: 2rem;">STABLE_AES_256</div>
-            </div>
-            <div class="sub-mod">
-                <div class="label" style="font-size: 0.8rem;">HARDWARE_ID</div>
-                <div style="font-size: 1rem;">LGA775_INTEL_CORE_QUAD</div>
-            </div>
+        <div class="module">
+            <div class="label">RAM_USAGE</div>
+            <div class="big-data" id="ram">00</div>
         </div>
     </div>
-    <div class="bottom-grid">
+
+    <div class="bottom-deck">
         <div class="btn-zone">
-            <button onclick="cmd('screenshot')">SNAP</button>
-            <button onclick="cmd('calc')">UTIL</button>
-            <button class="danger" onclick="cmd('reboot')">REBOOT</button>
-            <button class="danger" onclick="cmd('shutdown')">KILL</button>
+            <button onclick="sendCmd('screenshot')">SNAP</button>
+            <button onclick="sendCmd('calc')">APP</button>
+            <button class="danger" onclick="sendCmd('reboot')">REBOOT</button>
+            <button class="danger" onclick="sendCmd('shutdown')">POWER</button>
         </div>
-        <div id="terminal">>> SYSTEM_READY_FOR_INPUT...</div>
-        <div style="border: 1px solid var(--neon); padding: 10px; font-size: 0.7rem;">
-            ENCRYPTION: ACTIVE<br>ROOT_ACCESS: GRANTED<br>KERNEL_VERSION: 10.0.17763
-        </div>
+        <div id="console-log">>> INITIALIZING_CORE_LINK...</div>
     </div>
 </div>
+
 <script>
     const GITHUB = {
-        u: 'drodilkin', r: 'my-pc-monitor', t: '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'
+        u: 'drodilkin',
+        r: 'my-pc-monitor',
+        t: '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'
     };
-    function log(m) { const c = document.getElementById('terminal'); c.innerHTML += `\n[${new Date().toLocaleTimeString()}] > ${m}`; c.scrollTop = c.scrollHeight; }
-    async function cmd(a) {
-        if(!confirm('EXECUTE ' + a.toUpperCase() + '?')) return;
+
+    function log(msg) {
+        const c = document.getElementById('console-log');
+        c.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${msg}</div>`;
+        c.scrollTop = c.scrollHeight;
+    }
+
+    async function sendCmd(a) {
+        if(!confirm('EXEC_CMD: ' + a.toUpperCase() + '?')) return;
         try {
             const res = await fetch(`https://api.github.com/repos/${GITHUB.u}/${GITHUB.r}/contents/command.json`);
             const f = await res.json();
-            const body = { message: "update", content: btoa(JSON.stringify({command: a, time: Date.now()})), sha: f.sha };
+            const body = { 
+                message: "uplink", 
+                content: btoa(JSON.stringify({command: a, time: Date.now()})), 
+                sha: f.sha 
+            };
             await fetch(`https://api.github.com/repos/${GITHUB.u}/${GITHUB.r}/contents/command.json`, {
                 method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB.t }, body: JSON.stringify(body)
             });
-            log('COMMAND_SENT: ' + a);
-        } catch(e) { log('API_ERROR: ' + e.message); }
+            log('SIGNAL_SENT: ' + a);
+        } catch(e) { log('API_ERR: ' + e.message); }
     }
+
     async function sync() {
         try {
-            const r = await fetch(`https://raw.githubusercontent.com/${GITHUB.u}/${GITHUB.r}/main/stats.json?v=` + Date.now());
+            const r = await fetch(`https://raw.githubusercontent.com/${GITHUB.u}/${GITHUB.r}/main/stats.json?t=` + Date.now());
             const d = await r.json();
             document.getElementById('cpu').innerText = Math.round(d.cpu);
             document.getElementById('ram').innerText = Math.round(d.ram);
-            document.getElementById('temp').innerText = d.temp + '°C';
             document.getElementById('status').innerText = '[ LINK_ACTIVE ]';
             document.getElementById('status').style.color = '#00ff41';
-        } catch(e) {}
+        } catch(e) {
+            document.getElementById('status').innerText = '[ LINK_LOST ]';
+            document.getElementById('status').style.color = '#ff003c';
+        }
     }
-    setInterval(() => { document.getElementById('sys-time').innerText = new Date().toLocaleTimeString(); }, 1000);
+
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
     setInterval(sync, 5000); sync();
 </script>
 </body>
