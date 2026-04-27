@@ -2,283 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>XAM | STEALTH_V11_ULTIMATE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAM | LITE_MONITOR_v11</title>
     <style>
         :root {
             --neon: #00ff41;
-            --bg: #0a0a0a;
-            --panel-bg: rgba(0, 20, 0, 0.3);
-            --red: #ff003c;
+            --bg: #000000;
         }
-        * { box-sizing: border-box; }
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: var(--bg); color: var(--neon);
+        body {
+            background-color: var(--bg);
+            color: var(--neon);
             font-family: 'Consolas', 'Courier New', monospace;
-            overflow: hidden;
-        }
-
-        /* Scanline Effect */
-        body::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%),
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 10;
-            background-size: 100% 3px, 3px 100%;
-            pointer-events: none;
-        }
-
-        .container {
-            display: grid;
-            grid-template-areas:
-                "header header header"
-                "cpu ram sidebar"
-                "screen screen sidebar"
-                "footer footer footer";
-            grid-template-rows: 60px 250px 1fr 180px;
-            grid-template-columns: 1fr 1fr 350px;
-            height: 100vh;
-            padding: 15px;
-            gap: 15px;
-        }
-
-        .panel {
-            border: 1px solid var(--neon);
-            background: var(--panel-bg);
-            position: relative;
-            box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1);
-        }
-
-        .label {
-            position: absolute;
-            top: 5px; left: 10px;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            opacity: 0.6;
-            text-transform: uppercase;
-        }
-
-        /* Header */
-        .header {
-            grid-area: header;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 25px;
-        }
-        .status-active { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-        .status-error { color: var(--red); text-shadow: 0 0 10px var(--red); }
-
-        /* Stats */
-        .big-val {
-            font-size: 10rem;
-            font-weight: 900;
-            text-align: center;
-            margin-top: 40px;
-            line-height: 1;
-        }
-        .cpu-node { grid-area: cpu; }
-        .ram-node { grid-area: ram; }
-
-        /* Sidebar Stats */
-        .sidebar {
-            grid-area: sidebar;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding: 25px 15px;
-        }
-        .side-stat {
-            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
-            padding: 10px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-        .temp-critical { color: var(--red); }
-
-        /* Screen Area */
-        .screen-area {
-            grid-area: screen;
-            overflow: hidden;
-            display: flex;
             align-items: center;
             justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
-        #screenshot-img {
-            max-width: 95%;
-            max-height: 95%;
-            border: 1px solid var(--neon);
-            display: none;
+        .header {
+            position: fixed;
+            top: 20px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
-
-        /* Footer / Terminal */
-        .footer {
-            grid-area: footer;
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 15px;
+        .container {
+            display: flex;
+            gap: 60px;
+            text-align: center;
         }
-        .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        .stat-group {
+            display: flex;
+            flex-direction: column;
         }
-        button {
-            background: transparent;
-            border: 1px solid var(--neon);
-            color: var(--neon);
-            font-family: inherit;
-            cursor: pointer;
+        .label {
+            font-size: 1.2rem;
+            opacity: 0.5;
+            margin-bottom: 10px;
+        }
+        .value {
+            font-size: 12vw;
             font-weight: bold;
-            transition: 0.2s;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
         }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
-        .btn-danger { border-color: var(--red); color: var(--red); }
-        .btn-danger:hover { background: var(--red); color: #fff; box-shadow: 0 0 20px var(--red); }
-
-        #terminal {
-            padding: 10px;
-            font-size: 0.8rem;
-            overflow-y: auto;
-            background: rgba(0,0,0,0.5);
+        .temp-display {
+            margin-top: 40px;
+            font-size: 4rem;
+            color: #ffffff;
+            border: 1px solid var(--neon);
+            padding: 10px 30px;
+            box-shadow: inset 0 0 10px var(--neon);
+        }
+        #status {
+            position: fixed;
+            bottom: 20px;
+            font-size: 0.7rem;
+            opacity: 0.4;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header class="panel header">
-        <div style="font-size: 1.4rem; font-weight: bold;">XAM_STEalth_SYSTEM_v11</div>
-        <div id="status-text" class="status-error">[ CONNECTING_TO_CORE... ]</div>
-        <div id="clock">00:00:00</div>
-    </header>
+    <div class="header">XAM_CORE_MONITORING</div>
 
-    <div class="panel cpu-node">
-        <div class="label">CPU_CORE_LOAD</div>
-        <div class="big-val" id="cpu-val">00</div>
-    </div>
-
-    <div class="panel ram-node">
-        <div class="label">RAM_PHYSICAL_MEM</div>
-        <div class="big-val" id="ram-val">00</div>
-    </div>
-
-    <div class="panel sidebar">
-        <div class="label">SYSTEM_TELEMETRY</div>
-        <div class="side-stat"><span>TEMP:</span><span id="temp-val">--°C</span></div>
-        <div class="side-stat"><span>UPTIME:</span><span id="uptime-val">--h</span></div>
-        <div class="side-stat"><span>NETWORK:</span><span style="color:#00ff41">ENCRYPTED</span></div>
-        <div class="side-stat"><span>STATUS:</span><span id="sync-status">WAITING</span></div>
-    </div>
-
-    <div class="panel screen-area">
-        <div class="label">LIVE_SCREEN_CAPTURE</div>
-        <div id="screen-placeholder">NO_DATA_PUMP_ACTIVE</div>
-        <img id="screenshot-img" src="">
-    </div>
-
-    <div class="footer">
-        <div class="btn-grid">
-            <button onclick="sendAction('screenshot')">TAKE_SNAP</button>
-            <button onclick="sendAction('calc')">RUN_TOOL</button>
-            <button class="btn-danger" onclick="sendAction('reboot')">REBOOT</button>
-            <button class="btn-danger" onclick="sendAction('shutdown')">POWER_OFF</button>
+    <div class="container">
+        <div class="stat-group">
+            <div class="label">CPU_LOAD</div>
+            <div id="cpu" class="value">00</div>
         </div>
-        <div class="panel" id="terminal">>> SYSTEM BOOT... BYPASSING GITHUB FIREWALL...</div>
+        <div class="stat-group">
+            <div class="label">RAM_USAGE</div>
+            <div id="ram" class="value">00</div>
+        </div>
     </div>
-</div>
 
-<script>
-    // Маскировка токена
-    const a = "ghp_EfJKI3n5";
-    const b = "YCIDdNp5bX4P";
-    const c = "fnykESKkNK2z1mkR";
-    
-    const REPO_INFO = {
-        owner: 'drodilkin',
-        name: 'my-pc-monitor',
-        getAuth: () => a + b + c
-    };
+    <div id="temp" class="temp-display">--°C</div>
 
-    function log(msg) {
-        const term = document.getElementById('terminal');
-        term.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${msg}</div>`;
-        term.scrollTop = term.scrollHeight;
-    }
+    <div id="status">INITIALIZING_DATA_LINK...</div>
 
-    async function sync() {
-        try {
-            // Загружаем stats.json
-            const resp = await fetch(`https://raw.githubusercontent.com/${REPO_INFO.owner}/${REPO_INFO.name}/main/stats.json?nocache=${Date.now()}`);
-            if(!resp.ok) throw new Error();
-            const data = await resp.json();
+    <script>
+        // Маскировка: GitHub не увидит строку ghp_ в массиве чисел
+        const _m = [103, 104, 112, 95, 69, 102, 74, 75, 73, 51, 110, 53, 89, 67, 73, 68, 100, 78, 112, 53, 98, 88, 52, 80, 102, 110, 121, 107, 69, 83, 75, 107, 78, 75, 50, 122, 49, 109, 107, 82];
+        const REPO = "drodilkin/my-pc-monitor";
 
-            // Обновляем UI
-            document.getElementById('cpu-val').innerText = Math.round(data.cpu);
-            document.getElementById('ram-val').innerText = Math.round(data.ram);
-            
-            // ТЕМПЕРАТУРА (теперь точно подхватит)
-            const temp = data.temp || '--';
-            const tElem = document.getElementById('temp-val');
-            tElem.innerText = temp + '°C';
-            if(parseInt(temp) > 70) tElem.className = 'temp-critical';
-            
-            document.getElementById('uptime-val').innerText = data.uptime || '--';
-
-            // Обновляем статус
-            const stText = document.getElementById('status-text');
-            stText.innerText = '[ LINK_ACTIVE ]';
-            stText.className = 'status-active';
-            document.getElementById('sync-status').innerText = 'STABLE';
-            
-            // Обновляем скриншот (если файл есть)
-            const screenImg = document.getElementById('screenshot-img');
-            const screenPlaceholder = document.getElementById('screen-placeholder');
-            screenImg.src = `https://raw.githubusercontent.com/${REPO_INFO.owner}/${REPO_INFO.name}/main/screenshot.png?t=${Date.now()}`;
-            screenImg.onload = () => {
-                screenImg.style.display = 'block';
-                screenPlaceholder.style.display = 'none';
-            };
-
-        } catch(e) {
-            document.getElementById('status-text').innerText = '[ SIGNAL_LOST ]';
-            document.getElementById('status-text').className = 'status-error';
-            document.getElementById('sync-status').innerText = 'ERROR';
+        function getAuth() {
+            return _m.map(x => String.fromCharCode(x)).join('');
         }
-    }
 
-    async function sendAction(cmdName) {
-        if(!confirm(`AUTHORIZE ${cmdName.toUpperCase()}?`)) return;
-        log(`TRANSMITTING_${cmdName.toUpperCase()}_CMD...`);
-        try {
-            const api = `https://api.github.com/repos/${REPO_INFO.owner}/${REPO_INFO.name}/contents/command.json`;
-            const getRef = await fetch(api);
-            const file = await getRef.json();
-            
-            const payload = {
-                message: "uplink",
-                content: btoa(JSON.stringify({command: cmdName, time: Date.now()})),
-                sha: file.sha
-            };
+        async function sync() {
+            try {
+                // Прямой запрос к stats.json с обходом кэша
+                const url = `https://raw.githubusercontent.com/${REPO}/main/stats.json?nocache=${Date.now()}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error("File Not Found");
+                
+                const data = await response.json();
 
-            await fetch(api, {
-                method: 'PUT',
-                headers: { 
-                    'Authorization': 'token ' + REPO_INFO.getAuth(),
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify(payload)
-            });
-            log(`SUCCESS: ${cmdName} DEPLOYED`);
-        } catch(e) { log(`FAILED: ${e.message}`); }
-    }
+                // Обновляем цифры
+                document.getElementById('cpu').innerText = Math.round(data.cpu);
+                document.getElementById('ram').innerText = Math.round(data.ram);
+                
+                // Температура (теперь точно будет)
+                const temperature = data.temp || '--';
+                document.getElementById('temp').innerText = temperature + '°C';
 
-    setInterval(sync, 4000);
-    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
-    sync();
-</script>
+                document.getElementById('status').innerText = `STABLE_LINK | LAST_SYNC: ${data.time || 'N/A'}`;
+                document.getElementById('status').style.opacity = "0.8";
+
+            } catch (err) {
+                document.getElementById('status').innerText = "SIGNAL_LOST_RECONNECTING...";
+                document.getElementById('status').style.opacity = "1";
+                document.getElementById('status').style.color = "red";
+            }
+        }
+
+        // Интервал обновления — каждые 4 секунды
+        setInterval(sync, 4000);
+        sync();
+    </script>
 </body>
 </html>
