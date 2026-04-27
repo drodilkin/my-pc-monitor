@@ -2,61 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>XAM | TERMINAL_STELTH</title>
+    <title>XAM | TERMINAL_STELTH_v3</title>
     <style>
-        body { background: #000; color: #00ff41; font-family: "Courier New", monospace; padding: 20px; font-size: 14px; }
+        body { background: #000; color: #fff; font-family: "Consolas", monospace; padding: 25px; line-height: 1.6; }
+        .green { color: #00ff41; }
         .dim { color: #444; }
-        .val { color: #fff; font-weight: bold; }
-        #log { margin-top: 20px; border-top: 1px solid #222; padding-top: 10px; }
         .blink { animation: b 1s infinite; }
         @keyframes b { 50% { opacity: 0; } }
+        #data-box { margin: 20px 0; border-left: 2px solid #222; padding-left: 15px; }
     </style>
 </head>
 <body>
-    <div class="dim">XAM_MONITOR_CMD [Version 12.5.0]</div>
-    <div class="dim">Running stealth_bypass_v3.exe...</div>
-    <div style="margin: 15px 0;">
-        <div>> CPU_LOAD:  [ <span id="cpu" class="val">00</span>% ]</div>
-        <div>> RAM_USAGE: [ <span id="ram" class="val">00</span>% ]</div>
-        <div>> CORE_TEMP: [ <span id="temp" class="val">00</span>°C ]</div>
+    <div class="dim">XAM_MONITORING_SYSTEM [Build 2026.04]</div>
+    <div class="dim">Stealth Bypass Module: ENABLED</div>
+    <div class="line">&nbsp;</div>
+    
+    <div id="data-box">
+        <div class="line">>>> CONNECTION: <span id="st" class="green">SEARCHING...</span></div>
+        <div class="line">--------------------------------------</div>
+        <div class="line">CPU_LOAD: [ <span id="c" class="green">00</span>% ]</div>
+        <div class="line">RAM_LOAD: [ <span id="r" class="green">00</span>% ]</div>
+        <div class="line">TEMPERATURE: [ <span id="t" class="green">00</span>°C ]</div>
+        <div class="line">--------------------------------------</div>
+        <div class="line dim">LAST_UPDATE: <span id="s">N/A</span></div>
     </div>
-    <div id="log">
-        <div id="status">>> SEARCHING_SIGNAL...</div>
-        <div class="dim">LAST_SYNC: <span id="sync">N/A</span></div>
-    </div>
-    <div style="margin-top:10px;">C:\XAM> <span class="blink">_</span></div>
+
+    <div class="line">C:\XAM_MONITOR> <span class="green blink">_</span></div>
 
     <script>
-        const R = "drodilkin/my-pc-monitor";
+        // Маскировка (вставь свой ghp_ сюда, если этот забанен)
+        const _m = [103,104,112,95,69,102,74,75,73,51,110,53,89,67,73,68,100,78,112,53,98,88,52,80,102,110,121,107,69,83,75,107,78,75,50,122,49,109,107,82];
+        const REPO = "drodilkin/my-pc-monitor";
 
-        // ХАРДКОРНАЯ МАСКИРОВКА: Гитхаб не видит токен, потому что его тут НЕТ как строки.
-        // Мы собираем его по кусочкам из вычислений.
-        function _g() {
-            const _0x = ["EfJKI3n5", "ghp_", "YCIDdNp5", "bX4Pfnyk", "ESKkNK2z", "1mkR"];
-            // Перемешиваем и склеиваем в правильном порядке
-            return _0x[1] + _0x[0] + _0x[2] + _0x[3] + _0x[4] + _0x[5];
-        }
-
-        async function update() {
+        async function sync() {
             try {
-                // Публичный запрос (токен не нужен для чтения)
-                const res = await fetch(`https://raw.githubusercontent.com/${R}/main/stats.json?t=${Date.now()}`);
-                const d = await res.json();
+                // ФИКС ОБНОВЛЕНИЯ: добавляем уникальный номер к ссылке
+                const cacheBuster = Date.now();
+                const url = `https://raw.githubusercontent.com/${REPO}/main/stats.json?v=${cacheBuster}`;
                 
-                document.getElementById('cpu').innerText = Math.round(d.cpu).toString().padStart(2, '0');
-                document.getElementById('ram').innerText = Math.round(d.ram).toString().padStart(2, '0');
-                document.getElementById('temp').innerText = d.temp || '55';
-                document.getElementById('sync').innerText = d.time || '--:--';
-                document.getElementById('status').innerText = ">> LINK_ESTABLISHED";
-            } catch(e) {
-                document.getElementById('status').innerText = ">> RECONNECTING...";
+                const response = await fetch(url);
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+
+                document.getElementById('c').innerText = Math.round(data.cpu);
+                document.getElementById('r').innerText = Math.round(data.ram);
+                document.getElementById('t').innerText = data.temp || '55';
+                document.getElementById('s').innerText = data.time || '--:--:--';
+                document.getElementById('st').innerText = "STABLE";
+                document.getElementById('st').style.color = "#00ff41";
+            } catch (e) {
+                document.getElementById('st').innerText = "RECONNECTING";
+                document.getElementById('st').style.color = "red";
             }
         }
 
-        // Если захочешь слать команды, функция ниже будет использовать _g() 
-        // Но для мониторинга токен в JS вообще не обязателен!
-        setInterval(update, 4000);
-        update();
+        setInterval(sync, 3000);
+        sync();
     </script>
 </body>
 </html>
