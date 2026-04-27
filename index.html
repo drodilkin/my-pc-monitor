@@ -1,138 +1,112 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>XAM | MAINFRAME CONTROL</title>
+    <title>XAM V3</title>
     <style>
-        :root { --neon: #00ff41; --bg: #020202; --panel: #0a0a0a; --accent: #111; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 25px; display: flex; flex-direction: column; align-items: center; }
-        
-        /* Сетка панелей */
-        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; width: 100%; max-width: 1400px; }
-        
-        .panel { background: var(--panel); border: 1px solid #1a1a1a; padding: 25px; position: relative; border-radius: 4px; }
-        .panel-title { color: #444; font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 20px; text-transform: uppercase; border-left: 3px solid var(--neon); padding-left: 10px; }
-
-        /* Крупные показатели */
-        .big-stat { font-size: 3rem; font-weight: bold; color: #fff; margin: 10px 0; }
-        .stat-label { color: #555; font-size: 0.8rem; }
-
-        /* Кнопки */
-        .controls { display: grid; grid-template-columns: 1fr; gap: 12px; }
-        button { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 15px; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.2s; }
-        button:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
+        :root { --neon: #00ff41; --bg: #020202; }
+        body { background: var(--bg); color: var(--neon); font-family: monospace; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .panel { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 20px; border-radius: 4px; }
+        .big { font-size: 3rem; color: #fff; margin: 10px 0; }
+        .btn { border: 1px solid var(--neon); background: none; color: var(--neon); padding: 15px; width: 100%; cursor: pointer; margin-bottom: 10px; font-weight: bold; }
+        .btn:hover { background: var(--neon); color: #000; }
         .danger { border-color: #ff5f56; color: #ff5f56; }
-        .danger:hover { background: #ff5f56; color: #000; box-shadow: 0 0 15px #ff5f56; }
-
-        /* Лог консоли */
-        #log { background: #000; height: 150px; overflow-y: auto; padding: 10px; font-size: 0.75rem; border: 1px solid #111; margin-top: 15px; color: #008f11; }
-        
-        /* Полоска прогресса */
-        .bar-bg { background: #111; height: 4px; width: 100%; margin-top: 5px; }
+        #log { background: #000; height: 120px; overflow-y: auto; font-size: 0.7rem; padding: 10px; border: 1px solid #111; color: #008f11; }
+        .bar-bg { background: #111; height: 4px; width: 100%; }
         .bar-fill { background: var(--neon); height: 100%; width: 0%; transition: 0.5s; }
     </style>
 </head>
 <body>
 
-<div style="width: 100%; max-width: 1400px; margin-bottom: 20px; border-bottom: 1px solid #111; padding-bottom: 10px;">
-    <span style="font-size: 1.5rem; font-weight: bold; letter-spacing: 10px;">XAM_REMOTE_V3</span>
-    <span id="uptime" style="float: right; color: #333; font-size: 0.8rem;">SESSION_ID: 9928-X</span>
+<div style="border-bottom: 1px solid #111; padding-bottom: 10px; margin-bottom: 20px;">
+    <h1 style="margin:0; letter-spacing: 5px;">XAM_CORE_V3</h1>
 </div>
 
 <div class="grid">
     <div class="panel">
-        <div class="panel-title">Real-time Telemetry</div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div style="color:#444; font-size:0.7rem;">SYSTEM_METRICS</div>
+        <div style="display:flex; justify-content: space-between;">
             <div>
-                <div class="stat-label">PROCESSOR_LOAD</div>
-                <div class="big-stat"><span id="cpu">0</span>%</div>
+                <div style="font-size:0.8rem;">CPU_LOAD</div>
+                <div class="big" id="cpu">0%</div>
                 <div class="bar-bg"><div id="cpu-bar" class="bar-fill"></div></div>
             </div>
-            <div style="text-align: right;">
-                <div class="stat-label">MEMORY_USAGE</div>
-                <div class="big-stat" style="font-size: 2rem;"><span id="ram">0</span>%</div>
+            <div style="text-align:right;">
+                <div style="font-size:0.8rem;">RAM_USAGE</div>
+                <div class="big" id="ram">0%</div>
                 <div class="bar-bg"><div id="ram-bar" class="bar-fill"></div></div>
             </div>
         </div>
-        
-        <div style="margin-top: 40px; display: flex; gap: 40px;">
-            <div>
-                <div class="stat-label">CORE_TEMPERATURE</div>
-                <div style="font-size: 2rem; color: #ffbd2e;"><span id="temp">0</span>°C</div>
-            </div>
-            <div>
-                <div class="stat-label">LINK_QUALITY</div>
-                <div style="font-size: 2rem;" id="link-status">SYNCHRONIZING...</div>
-            </div>
+        <div style="margin-top:30px;">
+            <div style="font-size:0.8rem;">CORE_TEMP: <span id="temp" style="color:#ffbd2e; font-size:1.5rem;">0°C</span></div>
+            <div style="font-size:0.8rem; margin-top:10px;">LINK: <span id="link">SYNCING...</span></div>
         </div>
     </div>
 
     <div class="panel">
-        <div class="panel-title">Command Execution</div>
-        <div class="controls">
-            <button onclick="cmd('screenshot')">Take Screenshot</button>
-            <button onclick="cmd('calc')">Launch Utility</button>
-            <button class="danger" onclick="cmd('reboot')">Reboot System</button>
-            <button class="danger" onclick="cmd('shutdown')">Full Shutdown</button>
-        </div>
-        <div id="log">SYSTEM READY...</div>
+        <div style="color:#444; font-size:0.7rem; margin-bottom:15px;">EXECUTION_PANEL</div>
+        <button class="btn" onclick="run('screenshot')">SCREENSHOT</button>
+        <button class="btn" onclick="run('calc')">TEST_CALC</button>
+        <button class="btn danger" onclick="run('reboot')">REBOOT</button>
+        <button class="btn danger" onclick="run('shutdown')">SHUTDOWN</button>
+        <div id="log">SYSTEM_READY</div>
     </div>
 </div>
 
 <script>
-    // ПРЕДУПРЕЖДЕНИЕ: Вставь сюда новый токен, но не показывай его никому!
-    const CFG = {
-        user: 'drodilkin',
-        repo: 'my-pc-monitor',
-        token: 'ТВОЙ_НОВЫЙ_ТОКЕН_ЗДЕСЬ'
+    const CONFIG = {
+        u: 'drodilkin',
+        r: 'my-pc-monitor',
+        t: 'ТВОЙ_НОВЫЙ_ТОКЕН'
     };
 
-    function addLog(msg) {
+    function addLog(m) {
         const l = document.getElementById('log');
-        l.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        l.innerHTML += `<div>> ${new Date().toLocaleTimeString()}: ${m}</div>`;
         l.scrollTop = l.scrollHeight;
     }
 
-    async function cmd(action) {
-        if(!confirm(`EXECUTE ${action}?`)) return;
-        addLog(`Initiating ${action}...`);
+    async function run(a) {
+        if(!confirm('Run ' + a + '?')) return;
         try {
-            const r = await fetch(`https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/command.json`);
-            const file = await r.json();
-            const body = { message: "remote_cmd", content: btoa(JSON.stringify({command: action, time: Date.now()})), sha: file.sha };
-            
-            await fetch(`https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/command.json`, {
+            const res = await fetch(`https://api.github.com/repos/${CONFIG.u}/${CONFIG.r}/contents/command.json`);
+            const f = await res.json();
+            const body = { 
+                message: "cmd", 
+                content: btoa(JSON.stringify({command: a, time: Date.now()})), 
+                sha: f.sha 
+            };
+            await fetch(`https://api.github.com/repos/${CONFIG.u}/${CONFIG.r}/contents/command.json`, {
                 method: 'PUT',
-                headers: { 'Authorization': `token ${CFG.token}` },
+                headers: { 'Authorization': `token ${CONFIG.CONFIG_TOKEN || CONFIG.t}` },
                 body: JSON.stringify(body)
             });
-            addLog(`Command ${action} broadcasted successfully.`);
-        } catch(e) { addLog(`CRITICAL_ERROR: ${e.message}`); }
+            addLog('Sent: ' + a);
+        } catch(e) { addLog('Error: ' + e.message); }
     }
 
     async function sync() {
         try {
-            const r = await fetch(`https://raw.githubusercontent.com/${CFG.user}/${CFG.repo}/main/stats.json?t=${Date.now()}`);
+            const r = await fetch(`https://raw.githubusercontent.com/${CONFIG.u}/${CONFIG.r}/main/stats.json?t=${Date.now()}`);
             const d = await r.json();
             
-            // Числа
-            document.getElementById('cpu').innerText = parseFloat(d.cpu);
-            document.getElementById('ram').innerText = parseFloat(d.ram);
-            document.getElementById('temp').innerText = d.temp.replace('°C', '').trim();
-            
-            // Полоски
+            document.getElementById('cpu').innerText = parseFloat(d.cpu) + '%';
+            document.getElementById('ram').innerText = parseFloat(d.ram) + '%';
             document.getElementById('cpu-bar').style.width = d.cpu + '%';
             document.getElementById('ram-bar').style.width = d.ram + '%';
+            document.getElementById('temp').innerText = d.temp.toString().replace('°C','') + '°C';
             
-            document.getElementById('link-status').innerText = 'SECURE';
-            document.getElementById('link-status').style.color = 'var(--neon)';
+            document.getElementById('link').innerText = 'SECURE';
+            document.getElementById('link').style.color = '#00ff41';
         } catch(e) {
-            document.getElementById('link-status').innerText = 'LOST';
-            document.getElementById('link-status').style.color = '#ff5f56';
+            document.getElementById('link').innerText = 'OFFLINE';
+            document.getElementById('link').style.color = '#ff5f56';
         }
     }
 
-    setInterval(sync, 10000); sync();
+    setInterval(sync, 5000); // Обновление каждые 5 секунд
+    sync();
 </script>
 </body>
 </html>
