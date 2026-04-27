@@ -1,56 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>XAM V3</title>
+    <title>XAM | TERMINAL SYSTEM</title>
     <style>
-        :root { --neon: #00ff41; --bg: #020202; }
-        body { background: var(--bg); color: var(--neon); font-family: monospace; margin: 0; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .panel { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 20px; border-radius: 4px; }
-        .big { font-size: 3rem; color: #fff; margin: 10px 0; }
-        .btn { border: 1px solid var(--neon); background: none; color: var(--neon); padding: 15px; width: 100%; cursor: pointer; margin-bottom: 10px; font-weight: bold; }
-        .btn:hover { background: var(--neon); color: #000; }
-        .danger { border-color: #ff5f56; color: #ff5f56; }
-        #log { background: #000; height: 120px; overflow-y: auto; font-size: 0.7rem; padding: 10px; border: 1px solid #111; color: #008f11; }
-        .bar-bg { background: #111; height: 4px; width: 100%; }
-        .bar-fill { background: var(--neon); height: 100%; width: 0%; transition: 0.5s; }
+        :root { --neon: #00ff41; --bg: #020202; --panel: rgba(10, 10, 10, 0.9); --danger: #ff003c; }
+        
+        body { 
+            background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; 
+            margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh;
+        }
+
+        /* Эффект шума и сетки на фоне */
+        #bg-canvas { position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.1; }
+
+        .mainframe {
+            width: 95vw; height: 90vh; display: grid; grid-template-columns: 1fr 350px; gap: 20px;
+            padding: 20px; border: 1px solid #111; position: relative; background: var(--panel);
+            box-shadow: inset 0 0 100px rgba(0, 255, 65, 0.05);
+        }
+
+        /* Заголовок */
+        .header { grid-column: span 2; border-bottom: 2px solid var(--neon); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .glitch { font-size: 1.8rem; font-weight: bold; letter-spacing: 5px; text-shadow: 2px 2px var(--danger); }
+
+        /* Панели */
+        .panel { border: 1px solid #333; padding: 20px; position: relative; display: flex; flex-direction: column; }
+        .panel::before { content: ""; position: absolute; top: 0; left: 0; width: 10px; height: 10px; border-top: 2px solid var(--neon); border-left: 2px solid var(--neon); }
+        
+        /* Метрики */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
+        .stat-block { text-align: center; }
+        .big-num { font-size: 5rem; font-weight: bold; color: #fff; margin: 10px 0; }
+        .bar-container { height: 10px; background: #111; border: 1px solid #222; }
+        .bar-fill { height: 100%; background: var(--neon); width: 0%; transition: 1s cubic-bezier(0.075, 0.82, 0.165, 1); box-shadow: 0 0 15px var(--neon); }
+
+        /* Управление */
+        .controls { display: flex; flex-direction: column; gap: 15px; }
+        .btn { 
+            background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 15px; 
+            text-transform: uppercase; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.3s;
+        }
+        .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+        .btn.danger { border-color: var(--danger); color: var(--danger); }
+        .btn.danger:hover { background: var(--danger); color: #fff; box-shadow: 0 0 20px var(--danger); }
+
+        /* Лог */
+        #console { flex-grow: 1; background: #000; border: 1px solid #111; margin-top: 20px; padding: 10px; font-size: 0.7rem; overflow-y: auto; color: #008f11; }
+        
+        .temp-val { font-size: 2.5rem; color: #ffbd2e; text-shadow: 0 0 10px rgba(255, 189, 46, 0.3); }
     </style>
 </head>
 <body>
 
-<div style="border-bottom: 1px solid #111; padding-bottom: 10px; margin-bottom: 20px;">
-    <h1 style="margin:0; letter-spacing: 5px;">XAM_CORE_V3</h1>
-</div>
+<canvas id="bg-canvas"></canvas>
 
-<div class="grid">
+<div class="mainframe">
+    <div class="header">
+        <div class="glitch">XAM_MAINFRAME_V4.0</div>
+        <div id="status" style="font-size: 0.8rem;">[ STATUS: LINKING... ]</div>
+    </div>
+
     <div class="panel">
-        <div style="color:#444; font-size:0.7rem;">SYSTEM_METRICS</div>
-        <div style="display:flex; justify-content: space-between;">
-            <div>
-                <div style="font-size:0.8rem;">CPU_LOAD</div>
-                <div class="big" id="cpu">0%</div>
-                <div class="bar-bg"><div id="cpu-bar" class="bar-fill"></div></div>
+        <div style="color: #444; font-size: 0.7rem; letter-spacing: 2px;">LIVE_TELEMETRY_FEED</div>
+        
+        <div class="stats-grid">
+            <div class="stat-block">
+                <div style="color: #666;">CPU_UTILIZATION</div>
+                <div class="big-num" id="cpu">00</div>
+                <div class="bar-container"><div id="cpu-bar" class="bar-fill"></div></div>
             </div>
-            <div style="text-align:right;">
-                <div style="font-size:0.8rem;">RAM_USAGE</div>
-                <div class="big" id="ram">0%</div>
-                <div class="bar-bg"><div id="ram-bar" class="bar-fill"></div></div>
+            <div class="stat-block">
+                <div style="color: #666;">MEMORY_ALLOCATION</div>
+                <div class="big-num" id="ram">00</div>
+                <div class="bar-container"><div id="ram-bar" class="bar-fill"></div></div>
             </div>
         </div>
-        <div style="margin-top:30px;">
-            <div style="font-size:0.8rem;">CORE_TEMP: <span id="temp" style="color:#ffbd2e; font-size:1.5rem;">0°C</span></div>
-            <div style="font-size:0.8rem; margin-top:10px;">LINK: <span id="link">SYNCING...</span></div>
+
+        <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+                <div style="color: #666; font-size: 0.8rem; margin-bottom: 5px;">THERMAL_STATE</div>
+                <div id="temp" class="temp-val">0.0°C</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: #666; font-size: 0.8rem;">CORE_UPLINK</div>
+                <div id="uplink" style="font-size: 1.5rem; color: var(--neon);">OFFLINE</div>
+            </div>
         </div>
     </div>
 
     <div class="panel">
-        <div style="color:#444; font-size:0.7rem; margin-bottom:15px;">EXECUTION_PANEL</div>
-        <button class="btn" onclick="run('screenshot')">SCREENSHOT</button>
-        <button class="btn" onclick="run('calc')">TEST_CALC</button>
-        <button class="btn danger" onclick="run('reboot')">REBOOT</button>
-        <button class="btn danger" onclick="run('shutdown')">SHUTDOWN</button>
-        <div id="log">SYSTEM_READY</div>
+        <div style="color: #444; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 20px;">COMMAND_MODULE</div>
+        <div class="controls">
+            <button class="btn" onclick="exec('screenshot')">Capture Screen</button>
+            <button class="btn" onclick="exec('calc')">Remote Calc</button>
+            <button class="btn danger" onclick="exec('reboot')">Restart System</button>
+            <button class="btn danger" onclick="exec('shutdown')">Full Shutdown</button>
+        </div>
+        <div id="console">INITIALIZING TERMINAL...</div>
     </div>
 </div>
 
@@ -58,55 +105,70 @@
     const CONFIG = {
         u: 'drodilkin',
         r: 'my-pc-monitor',
-        t: 'ТВОЙ_НОВЫЙ_ТОКЕН'
+        t: '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'
     };
 
-    function addLog(m) {
-        const l = document.getElementById('log');
-        l.innerHTML += `<div>> ${new Date().toLocaleTimeString()}: ${m}</div>`;
-        l.scrollTop = l.scrollHeight;
+    function log(msg) {
+        const c = document.getElementById('console');
+        c.innerHTML += `<div>> [${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        c.scrollTop = c.scrollHeight;
     }
 
-    async function run(a) {
-        if(!confirm('Run ' + a + '?')) return;
+    async function exec(action) {
+        if(!confirm(`CONFIRM_COMMAND: ${action}?`)) return;
+        log(`Broadcasting: ${action}`);
         try {
             const res = await fetch(`https://api.github.com/repos/${CONFIG.u}/${CONFIG.r}/contents/command.json`);
             const f = await res.json();
             const body = { 
-                message: "cmd", 
-                content: btoa(JSON.stringify({command: a, time: Date.now()})), 
+                message: "system_call", 
+                content: btoa(JSON.stringify({command: action, time: Date.now()})), 
                 sha: f.sha 
             };
             await fetch(`https://api.github.com/repos/${CONFIG.u}/${CONFIG.r}/contents/command.json`, {
                 method: 'PUT',
-                headers: { 'Authorization': `token ${CONFIG.CONFIG_TOKEN || CONFIG.t}` },
+                headers: { 'Authorization': 'token ' + CONFIG.t },
                 body: JSON.stringify(body)
             });
-            addLog('Sent: ' + a);
-        } catch(e) { addLog('Error: ' + e.message); }
+            log(`Success: Signal received.`);
+        } catch(e) { log(`FAILED: ${e.message}`); }
     }
 
     async function sync() {
         try {
-            const r = await fetch(`https://raw.githubusercontent.com/${CONFIG.u}/${CONFIG.r}/main/stats.json?t=${Date.now()}`);
+            const r = await fetch(`https://raw.githubusercontent.com/${CONFIG.u}/${CONFIG.r}/main/stats.json?t=` + Date.now());
             const d = await r.json();
             
-            document.getElementById('cpu').innerText = parseFloat(d.cpu) + '%';
-            document.getElementById('ram').innerText = parseFloat(d.ram) + '%';
+            document.getElementById('cpu').innerText = Math.round(d.cpu).toString().padStart(2, '0');
+            document.getElementById('ram').innerText = Math.round(d.ram).toString().padStart(2, '0');
             document.getElementById('cpu-bar').style.width = d.cpu + '%';
             document.getElementById('ram-bar').style.width = d.ram + '%';
-            document.getElementById('temp').innerText = d.temp.toString().replace('°C','') + '°C';
+            document.getElementById('temp').innerText = d.temp.toString().replace('C','').replace('°','') + '°C';
             
-            document.getElementById('link').innerText = 'SECURE';
-            document.getElementById('link').style.color = '#00ff41';
+            document.getElementById('uplink').innerText = 'ENCRYPTED';
+            document.getElementById('status').innerText = '[ STATUS: ONLINE ]';
+            document.getElementById('status').style.color = 'var(--neon)';
         } catch(e) {
-            document.getElementById('link').innerText = 'OFFLINE';
-            document.getElementById('link').style.color = '#ff5f56';
+            document.getElementById('uplink').innerText = 'LOST';
+            document.getElementById('status').innerText = '[ STATUS: ERROR ]';
+            document.getElementById('status').style.color = 'var(--danger)';
         }
     }
 
-    setInterval(sync, 5000); // Обновление каждые 5 секунд
-    sync();
+    // Фоновая сетка
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#00ff41'; ctx.lineWidth = 0.5;
+        for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+        for(let j=0; j<canvas.height; j+=40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }
+    }
+    setInterval(draw, 100);
+    setInterval(sync, 5000); sync();
 </script>
 </body>
 </html>
