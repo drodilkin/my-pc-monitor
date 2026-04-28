@@ -3,33 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XAM | TERMINAL</title>
+    <title>XAM | TERMINAL ACCESS</title>
     <style>
         body { 
             background: #020202; color: #00ff41; 
-            font-family: 'Consolas', 'Monaco', monospace; 
+            font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
             display: flex; justify-content: center; align-items: center; 
-            height: 100vh; margin: 0;
+            height: 100vh; margin: 0; overflow: hidden;
         }
+        
         .terminal {
             width: 95%; max-width: 450px;
             background: #000; border: 1px solid #00ff41;
             padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 65, 0.15);
+            position: relative;
         }
+
         .header { border-bottom: 1px solid #111; padding-bottom: 10px; margin-bottom: 20px; font-size: 13px; color: #555; }
         .row { margin: 10px 0; display: flex; justify-content: space-between; font-size: 16px; }
         .val { color: #fff; font-weight: bold; }
+        
         .srv-block { margin-top: 25px; padding-top: 15px; border-top: 1px solid #111; }
+        .status { font-weight: bold; }
         .RUNNING { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         .OFFLINE { color: #ff3e3e; text-shadow: 0 0 5px #ff3e3e; }
+
         .cursor { display: inline-block; width: 8px; height: 15px; background: #00ff41; margin-left: 5px; animation: b 1s infinite; }
         @keyframes b { 50% { opacity: 0; } }
+
+        /* Эффект мерцания старого монитора */
+        .scanline {
+            width: 100%; height: 2px; background: rgba(0, 255, 65, 0.05);
+            position: absolute; top: 0; left: 0; pointer-events: none;
+            animation: scan 6s linear infinite;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
     </style>
 </head>
 <body>
 
 <div class="terminal">
-    <div class="header">XAM_REMOTE_ACCESS_v18.7 // DIRECT_LINK</div>
+    <div class="scanline"></div>
+    <div class="header">XAM_REMOTE_ACCESS_v18.9.1 // STATUS: SECURE</div>
 
     <div class="row"><span>CPU_LOAD:</span> <span id="c" class="val">--%</span></div>
     <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">--%</span></div>
@@ -44,42 +59,55 @@
 </div>
 
 <script>
-    // ПРЯМАЯ ССЫЛКА (замени drodilkin на свой ник в GitHub)
-    const DATA_URL = "https://drodilkin.github.io/my-pc-monitor/stats.json";
+    // === ВНИМАНИЕ: Проверь ник! ===
+    const USER = "drodilkin"; 
+    const REPO = "my-pc-monitor";
+    const URL = `https://${USER}.github.io/${REPO}/stats.json`;
 
     async function sync() {
         try {
-            // Берем файл напрямую, добавляя случайное число для обхода кэша
-            const r = await fetch(`${DATA_URL}?v=${Date.now()}`);
-            if (!r.ok) throw new Error('File not ready');
-            
-            const d = await r.json();
+            // Добавляем ?nocache=... чтобы браузер не показывал старые данные
+            const response = await fetch(`${URL}?nocache=${Date.now()}`, {
+                cache: "no-store"
+            });
 
+            if (!response.ok) {
+                console.log("Ждем обновления файла на GitHub...");
+                return;
+            }
+
+            const d = await response.json();
+
+            // Обновляем текст в терминале
             document.getElementById('c').innerText = Math.round(d.cpu) + '%';
             document.getElementById('r').innerText = Math.round(d.ram) + '%';
             document.getElementById('t').innerText = d.temp + '°C';
             document.getElementById('time').innerText = d.time;
 
+            // Чистим и заново создаем список серверов
             const srvCont = document.getElementById('servers');
             srvCont.innerHTML = "";
             
             if (d.servers) {
                 for (const [name, status] of Object.entries(d.servers)) {
+                    // Убираем подчеркивания для красоты
+                    let cleanName = name.replace(/_/g, ' ');
                     srvCont.innerHTML += `
                         <div class="row">
-                            <span>> ${name.replace(/_/g, ' ')}</span>
-                            <span class="${status}">${status}</span>
+                            <span>> ${cleanName}:</span>
+                            <span class="status ${status}">${status}</span>
                         </div>`;
                 }
             }
         } catch(e) {
-            console.log("Ожидание обновления данных...");
+            console.log("Ошибка синхронизации. Проверь stats.json");
         }
     }
 
-    // GitHub Pages обновляется чуть медленнее API, ставим 10 секунд
-    setInterval(sync, 10000); 
+    // Обновляем каждые 10 секунд
+    setInterval(sync, 10000);
     sync();
 </script>
+
 </body>
 </html>
