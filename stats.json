@@ -1,8 +1,8 @@
 {
-  "cpu": 5.9,
+  "cpu": 3.5,
   "ram": 54.7,
   "temp": 55,
-  "time": "18:08:35",
+  "time": "18:08:42",
   "logs": [
     "Log file not found... Check path!"
   ]
