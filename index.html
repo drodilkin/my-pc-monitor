@@ -2,54 +2,50 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XAM | TERMINAL</title>
     <style>
         body { background: #020202; color: #00ff41; font-family: 'Consolas', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .terminal { width: 95%; max-width: 450px; background: #000; border: 1px solid #00ff41; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 65, 0.15); position: relative; }
-        .header { border-bottom: 1px solid #111; padding-bottom: 10px; margin-bottom: 20px; font-size: 13px; color: #555; }
-        .row { margin: 10px 0; display: flex; justify-content: space-between; font-size: 16px; }
+        .terminal { width: 95%; max-width: 450px; background: #000; border: 1px solid #00ff41; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 65, 0.15); }
+        .row { margin: 10px 0; display: flex; justify-content: space-between; font-size: 18px; border-bottom: 1px solid #111; padding: 5px 0; }
         .val { color: #fff; font-weight: bold; }
-        .srv-block { margin-top: 25px; padding-top: 15px; border-top: 1px solid #111; }
         .RUNNING { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
         .OFFLINE { color: #ff3e3e; text-shadow: 0 0 5px #ff3e3e; }
-        .cursor { display: inline-block; width: 8px; height: 15px; background: #00ff41; margin-left: 5px; animation: b 1s infinite; }
-        @keyframes b { 50% { opacity: 0; } }
+        #status { font-size: 10px; color: #444; margin-top: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="terminal">
-    <div class="header" id="status-header">XAM_v18.9.2 // LINKING...</div>
-    <div class="row"><span>CPU_LOAD:</span> <span id="c" class="val">--%</span></div>
-    <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">--%</span></div>
-    <div class="row"><span>CORE_TEMP:</span> <span id="t" class="val">--°C</span></div>
-    <div class="srv-block" id="servers"></div>
-    <div style="margin-top:25px; font-size: 12px; color: #333;">
-        LAST_SYNC: <span id="time">--:--:--</span><br>
-        SYSTEM_READY <span class="cursor"></span>
-    </div>
+    <div style="font-size: 12px; color: #555; margin-bottom: 15px;">XAM_TERMINAL_v19.5 // RAW_DATA_LINK</div>
+    
+    <div class="row"><span>CPU:</span> <span id="c" class="val">--%</span></div>
+    <div class="row"><span>RAM:</span> <span id="r" class="val">--%</span></div>
+    <div class="row"><span>TEMP:</span> <span id="t" class="val">--°C</span></div>
+    
+    <div id="servers" style="margin-top: 15px;"></div>
+
+    <div id="status">SYNC: <span id="time">--:--:--</span> | <span id="msg">CONNECTING...</span></div>
 </div>
 
 <script>
-    // === ПРОВЕРЬ ЭТОТ БЛОК! ===
-    const USER = "drodilkin"; 
+    // === ЗАМЕНИ НА СВОЙ НИК И РЕПО ===
+    const USER = "drodilkin";
     const REPO = "my-pc-monitor";
-    const URL = `https://${USER}.github.io/${REPO}/stats.json`;
+    // Используем raw-ссылку, она обновляется быстрее всего
+    const URL = `https://raw.githubusercontent.com/${USER}/${REPO}/main/stats.json`;
 
     async function sync() {
-        const header = document.getElementById('status-header');
         try {
-            const response = await fetch(`${URL}?v=${Date.now()}`, { cache: "no-store" });
+            const r = await fetch(`${URL}?t=${Date.now()}`); // ?t= убивает кэш браузера
             
-            if (!response.ok) {
-                header.innerText = `ERROR: ${response.status} (Файл не найден)`;
+            if (!r.ok) {
+                document.getElementById('msg').innerText = "404 - NOT FOUND";
                 return;
             }
 
-            const d = await response.json();
-            header.innerText = "XAM_v18.9.2 // SYSTEM: ACTIVE";
-
+            const d = await r.json();
+            document.getElementById('msg').innerText = "OK";
+            
             document.getElementById('c').innerText = Math.round(d.cpu) + '%';
             document.getElementById('r').innerText = Math.round(d.ram) + '%';
             document.getElementById('t').innerText = d.temp + '°C';
@@ -59,16 +55,19 @@
             srvCont.innerHTML = "";
             if (d.servers) {
                 for (const [name, status] of Object.entries(d.servers)) {
-                    srvCont.innerHTML += `<div class="row"><span>> ${name.replace(/_/g, ' ')}:</span><span class="${status}">${status}</span></div>`;
+                    srvCont.innerHTML += `
+                        <div class="row">
+                            <span>> ${name}:</span>
+                            <span class="${status}">${status}</span>
+                        </div>`;
                 }
             }
         } catch(e) {
-            header.innerText = "ERROR: СЕТЕВАЯ ОШИБКА";
-            console.error(e);
+            document.getElementById('msg').innerText = "NETWORK ERROR";
         }
     }
 
-    setInterval(sync, 10000);
+    setInterval(sync, 5000); // Обновляем каждые 5 секунд
     sync();
 </script>
 </body>
