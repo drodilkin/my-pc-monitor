@@ -2,73 +2,113 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>XAM | TERMINAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XAM | MONITOR</title>
     <style>
-        body { background: #020202; color: #00ff41; font-family: 'Consolas', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .terminal { width: 95%; max-width: 450px; background: #000; border: 1px solid #00ff41; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 65, 0.15); }
-        .row { margin: 10px 0; display: flex; justify-content: space-between; font-size: 18px; border-bottom: 1px solid #111; padding: 5px 0; }
+        :root { --main-color: #00ff41; --bg-color: #020202; }
+        
+        body { 
+            background: var(--bg-color); color: var(--main-color); 
+            font-family: 'Consolas', 'Monaco', monospace; 
+            margin: 0; display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh;
+        }
+
+        .terminal {
+            width: 90%; max-width: 500px;
+            background: #000; border: 1px solid var(--main-color);
+            padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative; box-sizing: border-box;
+        }
+
+        .header { border-bottom: 1px solid #222; padding-bottom: 8px; margin-bottom: 15px; font-size: 11px; color: #555; }
+        .row { margin: 12px 0; display: flex; justify-content: space-between; font-size: 18px; align-items: center; }
         .val { color: #fff; font-weight: bold; }
-        .RUNNING { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
-        .OFFLINE { color: #ff3e3e; text-shadow: 0 0 5px #ff3e3e; }
-        #status { font-size: 10px; color: #444; margin-top: 20px; text-align: center; }
+
+        /* Статусы серверов */
+        .srv-block { margin-top: 20px; padding-top: 15px; border-top: 1px solid #222; }
+        .status { font-weight: bold; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+        .RUNNING { color: var(--bg-color); background: var(--main-color); box-shadow: 0 0 8px var(--main-color); }
+        .OFFLINE { color: #fff; background: #ff3e3e; }
+
+        /* Адаптация под мобилки */
+        @media (max-width: 480px) {
+            .terminal { padding: 15px; width: 95%; }
+            .row { font-size: 16px; margin: 15px 0; }
+            .header { font-size: 10px; }
+            .status { font-size: 12px; }
+        }
+
+        .footer { margin-top: 20px; font-size: 11px; color: #333; display: flex; justify-content: space-between; }
+        .cursor { display: inline-block; width: 8px; height: 14px; background: var(--main-color); animation: b 1s infinite; vertical-align: middle; }
+        @keyframes b { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
 <div class="terminal">
-    <div style="font-size: 12px; color: #555; margin-bottom: 15px;">XAM_TERMINAL_v19.5 // RAW_DATA_LINK</div>
-    
-    <div class="row"><span>CPU:</span> <span id="c" class="val">--%</span></div>
-    <div class="row"><span>RAM:</span> <span id="r" class="val">--%</span></div>
-    <div class="row"><span>TEMP:</span> <span id="t" class="val">--°C</span></div>
-    
-    <div id="servers" style="margin-top: 15px;"></div>
+    <div class="header">XAM_v19.8 // MOBILE_READY // HIGH_SPEED</div>
 
-    <div id="status">SYNC: <span id="time">--:--:--</span> | <span id="msg">CONNECTING...</span></div>
+    <div class="row"><span>CPU_LOAD:</span> <span id="c" class="val">--%</span></div>
+    <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">--%</span></div>
+    <div class="row"><span>CORE_TEMP:</span> <span id="t" class="val">--°C</span></div>
+    
+    <div class="srv-block" id="servers">
+        </div>
+
+    <div class="footer">
+        <div>SYNC: <span id="time">--:--:--</span></div>
+        <div>STATUS: <span id="msg" style="color:#00ff41">OK</span> <span class="cursor"></span></div>
+    </div>
 </div>
 
 <script>
-    // === ЗАМЕНИ НА СВОЙ НИК И РЕПО ===
+    // === НАСТРОЙКИ (ЗАМЕНИ НА СВОИ) ===
     const USER = "drodilkin";
     const REPO = "my-pc-monitor";
-    // Используем raw-ссылку, она обновляется быстрее всего
-    const URL = `https://raw.githubusercontent.com/${USER}/${REPO}/main/stats.json`;
+    const BRANCH = "main"; // или master
+    
+    // Прямая ссылка на RAW файл для обхода кэша GitHub Pages
+    const URL = `https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/stats.json`;
 
     async function sync() {
         try {
-            const r = await fetch(`${URL}?t=${Date.now()}`); // ?t= убивает кэш браузера
-            
-            if (!r.ok) {
-                document.getElementById('msg').innerText = "404 - NOT FOUND";
-                return;
-            }
+            // Добавляем уникальный параметр ?t= для ПОЛНОГО игнорирования кэша
+            const r = await fetch(`${URL}?t=${new Date().getTime()}`, {
+                cache: "no-store"
+            });
 
+            if (!r.ok) throw new Error('404');
             const d = await r.json();
-            document.getElementById('msg').innerText = "OK";
-            
+
             document.getElementById('c').innerText = Math.round(d.cpu) + '%';
             document.getElementById('r').innerText = Math.round(d.ram) + '%';
             document.getElementById('t').innerText = d.temp + '°C';
             document.getElementById('time').innerText = d.time;
+            document.getElementById('msg').innerText = "ONLINE";
 
             const srvCont = document.getElementById('servers');
             srvCont.innerHTML = "";
+            
             if (d.servers) {
                 for (const [name, status] of Object.entries(d.servers)) {
                     srvCont.innerHTML += `
                         <div class="row">
-                            <span>> ${name}:</span>
-                            <span class="${status}">${status}</span>
+                            <span style="font-size:14px">> ${name.replace(/_/g, ' ')}</span>
+                            <span class="status ${status}">${status}</span>
                         </div>`;
                 }
             }
         } catch(e) {
-            document.getElementById('msg').innerText = "NETWORK ERROR";
+            document.getElementById('msg').innerText = "LOST";
+            document.getElementById('msg').style.color = "#ff3e3e";
         }
     }
 
-    setInterval(sync, 5000); // Обновляем каждые 5 секунд
+    // Обновляем каждые 5 секунд (Raw позволяет чаще)
+    setInterval(sync, 5000);
     sync();
 </script>
+
 </body>
 </html>
