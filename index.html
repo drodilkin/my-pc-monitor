@@ -33,7 +33,7 @@
 <body>
 
 <div class="terminal">
-    <div class="header">XAM_REMOTE_ACCESS_v18.4 // STATUS: SECURE</div>
+    <div class="header">XAM_REMOTE_ACCESS_v18.5 // STATUS: SECURE</div>
 
     <div class="row"><span>CPU_LOAD:</span> <span id="c" class="val">0%</span></div>
     <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">0%</span></div>
@@ -48,31 +48,44 @@
 </div>
 
 <script>
-    const REPO = "drodilkin/my-pc-monitor";
+    // ЗАМЕНИ НА СВОЙ РЕПОЗИТОРИЙ
+    const REPO = "drodilkin/my-pc-monitor"; 
 
     async function sync() {
         try {
+            // Добавляем ?t= для обхода кэша GitHub
             const r = await fetch(`https://api.github.com/repos/${REPO}/contents/stats.json?t=${Date.now()}`);
             const j = await r.json();
             const d = JSON.parse(atob(j.content));
 
-            document.getElementById('c').innerText = d.cpu + '%';
-            document.getElementById('r').innerText = d.ram + '%';
+            // Обновляем основные показатели
+            document.getElementById('c').innerText = Math.round(d.cpu) + '%';
+            document.getElementById('r').innerText = Math.round(d.ram) + '%';
             document.getElementById('t').innerText = d.temp + '°C';
             document.getElementById('time').innerText = d.time;
 
-            const srv = document.getElementById('servers');
-            srv.innerHTML = "";
-            // Скрипт сам создаст строчку для каждого сервера из stats.json
-            for (const [name, status] of Object.entries(d.servers)) {
-                srv.innerHTML += `
-                    <div class="row">
-                        <span>> ${name.replace('_', ' ')}</span>
-                        <span class="${status}">${status}</span>
-                    </div>`;
+            // Обновляем список серверов
+            const srvCont = document.getElementById('servers');
+            srvCont.innerHTML = "";
+            
+            // Если в json есть сервера, выводим их
+            if (d.servers) {
+                for (const [name, status] of Object.entries(d.servers)) {
+                    srvCont.innerHTML += `
+                        <div class="row">
+                            <span>> ${name.replace(/_/g, ' ')}</span>
+                            <span class="${status}">${status}</span>
+                        </div>`;
+                }
+            } else if (d.logs) {
+                // Если серверов нет, но есть логи (старая структура)
+                srvCont.innerHTML = `<div style="font-size:10px; color:#444">${d.logs[0]}</div>`;
             }
-        } catch(e) {}
+        } catch(e) {
+            console.log("Sync error:", e);
+        }
     }
+
     setInterval(sync, 5000);
     sync();
 </script>
