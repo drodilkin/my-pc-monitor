@@ -1,9 +1,26 @@
 {
-  "cpu": 3.8,
-  "ram": 54.7,
+  "cpu": 0.8,
+  "ram": 26.2,
   "temp": 55,
-  "time": "18:09:04",
-  "logs": [
-    "Log file not found... Check path!"
-  ]
+  "time": "18:22:06",
+  "servers": {
+    "Bedrock_1": {
+      "online": false,
+      "logs": [
+        "Status monitoring only"
+      ]
+    },
+    "Bedrock_2": {
+      "online": false,
+      "logs": [
+        "Status monitoring only"
+      ]
+    },
+    "Java_Server": {
+      "online": false,
+      "logs": [
+        "\u041b\u043e\u0433 \u043f\u043e\u043a\u0430 \u043d\u0435 \u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d..."
+      ]
+    }
+  }
 }
