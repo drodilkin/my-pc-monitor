@@ -1,11 +1,11 @@
 {
-  "cpu": 8.2,
-  "ram": 33.6,
-  "temp": 45,
-  "time": "18:44:08",
+  "cpu": 3.5,
+  "ram": 37.8,
+  "temp": 47,
+  "time": "18:44:21",
   "servers": {
     "1Block_Bedrock": "RUNNING",
-    "Survival_Bedrock": "OFFLINE",
+    "Survival_Bedrock": "RUNNING",
     "Java_1_Block": "OFFLINE"
   }
 }
