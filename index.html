@@ -3,67 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XAM TERMINAL</title>
+    <title>XAM | TERMINAL</title>
     <style>
         body { 
-            background: #000; color: #00ff41; 
-            font-family: 'Consolas', 'Courier New', monospace; 
+            background: #020202; color: #00ff41; 
+            font-family: 'Consolas', 'Monaco', monospace; 
             display: flex; justify-content: center; align-items: center; 
-            height: 100vh; margin: 0; overflow: hidden;
+            height: 100vh; margin: 0;
         }
         
         .terminal {
-            width: 90%; max-width: 500px;
-            background: #000; border: 2px solid #00ff41;
-            padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
-            position: relative;
+            width: 95%; max-width: 450px;
+            background: #000; border: 1px solid #00ff41;
+            padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 65, 0.15);
         }
 
-        .header { border-bottom: 1px solid #00ff41; padding-bottom: 10px; margin-bottom: 15px; font-size: 14px; }
-        .row { margin: 8px 0; display: flex; justify-content: space-between; }
-        .val { color: #fff; }
+        .header { border-bottom: 1px solid #111; padding-bottom: 10px; margin-bottom: 20px; font-size: 13px; color: #555; }
+        .row { margin: 10px 0; display: flex; justify-content: space-between; font-size: 16px; }
+        .val { color: #fff; font-weight: bold; }
         
-        .server-line { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #222; }
-        .online { color: #00ff41; }
-        .offline { color: #ff0000; text-shadow: 0 0 5px #ff0000; }
-        
-        .blink { animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
-        
-        .scanline {
-            width: 100%; height: 2px; background: rgba(0, 255, 65, 0.1);
-            position: absolute; top: 0; left: 0; pointer-events: none;
-            animation: scan 4s linear infinite;
-        }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        .srv-block { margin-top: 25px; padding-top: 15px; border-top: 1px solid #111; }
+        .RUNNING { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
+        .OFFLINE { color: #ff3e3e; }
+
+        .cursor { display: inline-block; width: 8px; height: 15px; background: #00ff41; margin-left: 5px; animation: b 1s infinite; }
+        @keyframes b { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
 <div class="terminal">
-    <div class="scanline"></div>
-    <div class="header">
-        [ SYSTEM MONITOR V18 ]<br>
-        USER: XAM | SECURE_LINK: ACTIVE
-    </div>
+    <div class="header">XAM_REMOTE_ACCESS_v18.4 // STATUS: SECURE</div>
 
-    <div class="row"><span>CPU_USAGE:</span> <span id="c" class="val">0%</span></div>
+    <div class="row"><span>CPU_LOAD:</span> <span id="c" class="val">0%</span></div>
     <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">0%</span></div>
     <div class="row"><span>CORE_TEMP:</span> <span id="t" class="val">0°C</span></div>
     
-    <div class="server-line" id="srv">
-        </div>
+    <div class="srv-block" id="servers"></div>
 
-    <div style="margin-top:20px; font-size: 12px; color: #444;">
+    <div style="margin-top:25px; font-size: 12px; color: #333;">
         LAST_SYNC: <span id="time">--:--:--</span><br>
-        C:\XAM\SYSTEM> <span class="blink">_</span>
+        SYSTEM_READY <span class="cursor"></span>
     </div>
 </div>
 
 <script>
     const REPO = "drodilkin/my-pc-monitor";
 
-    async function update() {
+    async function sync() {
         try {
             const r = await fetch(`https://api.github.com/repos/${REPO}/contents/stats.json?t=${Date.now()}`);
             const j = await r.json();
@@ -74,20 +61,20 @@
             document.getElementById('t').innerText = d.temp + '°C';
             document.getElementById('time').innerText = d.time;
 
-            const srv = document.getElementById('srv');
+            const srv = document.getElementById('servers');
             srv.innerHTML = "";
+            // Скрипт сам создаст строчку для каждого сервера из stats.json
             for (const [name, status] of Object.entries(d.servers)) {
-                const isOff = status === "OFFLINE";
                 srv.innerHTML += `
                     <div class="row">
-                        <span>> ${name}:</span>
-                        <span class="${isOff ? 'offline' : 'online'}">[${status}]</span>
+                        <span>> ${name.replace('_', ' ')}</span>
+                        <span class="${status}">${status}</span>
                     </div>`;
             }
         } catch(e) {}
     }
-    setInterval(update, 5000);
-    update();
+    setInterval(sync, 5000);
+    sync();
 </script>
 
 </body>
