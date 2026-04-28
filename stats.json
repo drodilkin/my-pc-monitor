@@ -1,8 +1,8 @@
 {
-  "cpu": 0.8,
-  "ram": 26.2,
+  "cpu": 0.4,
+  "ram": 26.1,
   "temp": 55,
-  "time": "18:22:06",
+  "time": "18:22:18",
   "servers": {
     "Bedrock_1": {
       "online": false,
