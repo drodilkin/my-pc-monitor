@@ -2,74 +2,93 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>XAM | SERVER_DASHBOARD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAM TERMINAL</title>
     <style>
-        body { background: #000; color: #00ff41; font-family: "Consolas", monospace; padding: 20px; }
-        .stats { display: flex; gap: 30px; margin-bottom: 20px; font-size: 1.2rem; }
+        body { 
+            background: #000; color: #00ff41; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; overflow: hidden;
+        }
+        
+        .terminal {
+            width: 90%; max-width: 500px;
+            background: #000; border: 2px solid #00ff41;
+            padding: 20px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            position: relative;
+        }
+
+        .header { border-bottom: 1px solid #00ff41; padding-bottom: 10px; margin-bottom: 15px; font-size: 14px; }
+        .row { margin: 8px 0; display: flex; justify-content: space-between; }
         .val { color: #fff; }
         
-        /* СТИЛЬ КОНСОЛИ */
-        #terminal {
-            background: #0a0a0a;
-            border: 1px solid #333;
-            padding: 15px;
-            height: 250px;
-            overflow: hidden;
-            font-size: 12px;
-            color: #ccc;
-            box-shadow: inset 0 0 10px #000;
+        .server-line { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #222; }
+        .online { color: #00ff41; }
+        .offline { color: #ff0000; text-shadow: 0 0 5px #ff0000; }
+        
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        
+        .scanline {
+            width: 100%; height: 2px; background: rgba(0, 255, 65, 0.1);
+            position: absolute; top: 0; left: 0; pointer-events: none;
+            animation: scan 4s linear infinite;
         }
-        .log-entry { margin-bottom: 4px; border-bottom: 1px solid #111; }
-        .dim { color: #555; }
-        .prefix { color: #00ff41; margin-right: 10px; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
     </style>
 </head>
 <body>
-    <div class="dim">XAM_REMOTE_CONSOLE [Active]</div>
+
+<div class="terminal">
+    <div class="scanline"></div>
+    <div class="header">
+        [ SYSTEM MONITOR V18 ]<br>
+        USER: XAM | SECURE_LINK: ACTIVE
+    </div>
+
+    <div class="row"><span>CPU_USAGE:</span> <span id="c" class="val">0%</span></div>
+    <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">0%</span></div>
+    <div class="row"><span>CORE_TEMP:</span> <span id="t" class="val">0°C</span></div>
     
-    <div class="stats">
-        <div>CPU: <span id="c" class="val">0</span>%</div>
-        <div>RAM: <span id="r" class="val">0</span>%</div>
-        <div>TEMP: <span id="t" class="val">0</span>°C</div>
+    <div class="server-line" id="srv">
+        </div>
+
+    <div style="margin-top:20px; font-size: 12px; color: #444;">
+        LAST_SYNC: <span id="time">--:--:--</span><br>
+        C:\XAM\SYSTEM> <span class="blink">_</span>
     </div>
+</div>
 
-    <div class="dim">SERVER_LOG_STREAM:</div>
-    <div id="terminal">
-        <div class="log-entry">Waiting for stream...</div>
-    </div>
+<script>
+    const REPO = "drodilkin/my-pc-monitor";
 
-    <script>
-        const REPO = "drodilkin/my-pc-monitor";
+    async function update() {
+        try {
+            const r = await fetch(`https://api.github.com/repos/${REPO}/contents/stats.json?t=${Date.now()}`);
+            const j = await r.json();
+            const d = JSON.parse(atob(j.content));
 
-        async function update() {
-            try {
-                // Используем API для обхода кэша
-                const r = await fetch(`https://api.github.com/repos/${REPO}/contents/stats.json?t=${Date.now()}`);
-                const j = await r.json();
-                const d = JSON.parse(atob(j.content));
+            document.getElementById('c').innerText = d.cpu + '%';
+            document.getElementById('r').innerText = d.ram + '%';
+            document.getElementById('t').innerText = d.temp + '°C';
+            document.getElementById('time').innerText = d.time;
 
-                // Цифры
-                document.getElementById('c').innerText = Math.round(d.cpu);
-                document.getElementById('r').innerText = Math.round(d.ram);
-                document.getElementById('t').innerText = d.temp;
+            const srv = document.getElementById('srv');
+            srv.innerHTML = "";
+            for (const [name, status] of Object.entries(d.servers)) {
+                const isOff = status === "OFFLINE";
+                srv.innerHTML += `
+                    <div class="row">
+                        <span>> ${name}:</span>
+                        <span class="${isOff ? 'offline' : 'online'}">[${status}]</span>
+                    </div>`;
+            }
+        } catch(e) {}
+    }
+    setInterval(update, 5000);
+    update();
+</script>
 
-                // Консоль
-                const term = document.getElementById('terminal');
-                term.innerHTML = ""; // Чистим старое
-                
-                if (d.logs && d.logs.length > 0) {
-                    d.logs.forEach(line => {
-                        const div = document.createElement('div');
-                        div.className = 'log-entry';
-                        div.innerHTML = `<span class="prefix">></span>${line}`;
-                        term.appendChild(div);
-                    });
-                }
-            } catch(e) {}
-        }
-
-        setInterval(update, 5000);
-        update();
-    </script>
 </body>
 </html>
