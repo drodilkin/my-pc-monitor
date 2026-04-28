@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XAM | TERMINAL</title>
+    <title>XAM | TERMINAL ACCESS</title>
     <style>
         body { 
             background: #020202; color: #00ff41; 
-            font-family: 'Consolas', 'Monaco', monospace; 
+            font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
             display: flex; justify-content: center; align-items: center; 
-            height: 100vh; margin: 0;
+            height: 100vh; margin: 0; overflow: hidden;
         }
         
         .terminal {
             width: 95%; max-width: 450px;
             background: #000; border: 1px solid #00ff41;
             padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 65, 0.15);
+            position: relative;
         }
 
         .header { border-bottom: 1px solid #111; padding-bottom: 10px; margin-bottom: 20px; font-size: 13px; color: #555; }
@@ -23,23 +24,34 @@
         .val { color: #fff; font-weight: bold; }
         
         .srv-block { margin-top: 25px; padding-top: 15px; border-top: 1px solid #111; }
+        .status { font-weight: bold; }
         .RUNNING { color: #00ff41; text-shadow: 0 0 5px #00ff41; }
-        .OFFLINE { color: #ff3e3e; }
+        .OFFLINE { color: #ff3e3e; text-shadow: 0 0 5px #ff3e3e; }
 
         .cursor { display: inline-block; width: 8px; height: 15px; background: #00ff41; margin-left: 5px; animation: b 1s infinite; }
         @keyframes b { 50% { opacity: 0; } }
+
+        /* Эффект старого монитора */
+        .scanline {
+            width: 100%; height: 2px; background: rgba(0, 255, 65, 0.05);
+            position: absolute; top: 0; left: 0; pointer-events: none;
+            animation: scan 6s linear infinite;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
     </style>
 </head>
 <body>
 
 <div class="terminal">
-    <div class="header">XAM_REMOTE_ACCESS_v18.5 // STATUS: SECURE</div>
+    <div class="scanline"></div>
+    <div class="header">XAM_REMOTE_ACCESS_v18.6 // ENCODING: UTF-8 // SECURE</div>
 
-    <div class="row"><span>CPU_LOAD:</span> <span id="c" class="val">0%</span></div>
-    <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">0%</span></div>
-    <div class="row"><span>CORE_TEMP:</span> <span id="t" class="val">0°C</span></div>
+    <div class="row"><span>CPU_LOAD:</span> <span id="c" class="val">--%</span></div>
+    <div class="row"><span>RAM_USAGE:</span> <span id="r" class="val">--%</span></div>
+    <div class="row"><span>CORE_TEMP:</span> <span id="t" class="val">--°C</span></div>
     
-    <div class="srv-block" id="servers"></div>
+    <div class="srv-block" id="servers">
+        </div>
 
     <div style="margin-top:25px; font-size: 12px; color: #333;">
         LAST_SYNC: <span id="time">--:--:--</span><br>
@@ -48,44 +60,55 @@
 </div>
 
 <script>
-    // ЗАМЕНИ НА СВОЙ РЕПОЗИТОРИЙ
+    // Проверь, что это твой репозиторий!
     const REPO = "drodilkin/my-pc-monitor"; 
 
     async function sync() {
         try {
-            // Добавляем ?t= для обхода кэша GitHub
-            const r = await fetch(`https://api.github.com/repos/${REPO}/contents/stats.json?t=${Date.now()}`);
-            const j = await r.json();
-            const d = JSON.parse(atob(j.content));
+            // Запрос к GitHub API с обходом кэша
+            const response = await fetch(`https://api.github.com/repos/${REPO}/contents/stats.json?t=${Date.now()}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+            
+            // Безопасное декодирование Base64 с поддержкой кириллицы (UTF-8)
+            const binString = atob(data.content);
+            const bytes = new Uint8Array(binString.length);
+            for (let i = 0; i < binString.length; i++) {
+                bytes[i] = binString.charCodeAt(i);
+            }
+            const decodedText = new TextDecoder().decode(bytes);
+            const stats = JSON.parse(decodedText);
 
-            // Обновляем основные показатели
-            document.getElementById('c').innerText = Math.round(d.cpu) + '%';
-            document.getElementById('r').innerText = Math.round(d.ram) + '%';
-            document.getElementById('t').innerText = d.temp + '°C';
-            document.getElementById('time').innerText = d.time;
+            // Обновление интерфейса
+            document.getElementById('c').innerText = Math.round(stats.cpu) + '%';
+            document.getElementById('r').innerText = Math.round(stats.ram) + '%';
+            document.getElementById('t').innerText = stats.temp + '°C';
+            document.getElementById('time').innerText = stats.time;
 
-            // Обновляем список серверов
             const srvCont = document.getElementById('servers');
             srvCont.innerHTML = "";
             
-            // Если в json есть сервера, выводим их
-            if (d.servers) {
-                for (const [name, status] of Object.entries(d.servers)) {
+            // Вывод списка серверов
+            if (stats.servers) {
+                for (const [name, status] of Object.entries(stats.servers)) {
                     srvCont.innerHTML += `
                         <div class="row">
                             <span>> ${name.replace(/_/g, ' ')}</span>
-                            <span class="${status}">${status}</span>
+                            <span class="status ${status}">${status}</span>
                         </div>`;
                 }
-            } else if (d.logs) {
-                // Если серверов нет, но есть логи (старая структура)
-                srvCont.innerHTML = `<div style="font-size:10px; color:#444">${d.logs[0]}</div>`;
+            } else if (stats.logs) {
+                // Заглушка, если данные еще в старом формате
+                srvCont.innerHTML = `<div style="font-size:10px; color:#444">WAITING FOR NEW DATA STRUCTURE...</div>`;
             }
+
         } catch(e) {
-            console.log("Sync error:", e);
+            console.error("Sync error:", e);
         }
     }
 
+    // Обновление каждые 5 секунд
     setInterval(sync, 5000);
     sync();
 </script>
