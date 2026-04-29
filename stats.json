@@ -1,11 +1,11 @@
 {
-  "cpu": SERVER IS OFF,
-  "ram": SERVER IS OFF,
-  "temp": SERVER IS OFF,
-  "time": "SERVER IS OFF",
+  "cpu": 66.0,
+  "ram": 33.8,
+  "temp": 55,
+  "time": "18:54:03",
   "servers": {
-    "1_Block_Bedrock": "SERVER IS OFF",
-    "Survival_Bedrock": "SERVER IS OFF",
-    "Main_Java": "SERVER IS OFF"
+    "1_Block_Bedrock": "RUNNING",
+    "Survival_Bedrock": "RUNNING",
+    "Main_Java": "RUNNING"
   }
 }
