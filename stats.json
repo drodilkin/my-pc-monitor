@@ -1,8 +1,8 @@
 {
-  "cpu": 8.9,
+  "cpu": 28.2,
   "ram": 63.4,
   "temp": 48,
-  "time": "15:32:37",
+  "time": "15:32:50",
   "servers": {
     "1_Block_Bedrock": "RUNNING",
     "Survival_Bedrock": "RUNNING",
